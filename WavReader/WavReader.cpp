@@ -7,7 +7,7 @@ using namespace std;
 using std::string;
 using std::fstream;
 
-typedef struct  WAV_HEADER {
+typedef struct WAV_HEADER {
     char                RIFF[4];        // RIFF Header      Magic header
     unsigned long       ChunkSize;      // RIFF Chunk Size  
     char                WAVE[4];        // WAVE Header      
@@ -22,102 +22,84 @@ typedef struct  WAV_HEADER {
     char                Subchunk2ID[4]; // "data"  string   
     unsigned long       Subchunk2Size;  // Sampled data length    
 
-}wav_hdr;
+} wav_hdr;
 
 // Function prototypes 
 int getFileSize(FILE* inFile);
 
+const int headSize = sizeof(wav_hdr);
+
 int main(int argc, char* argv[]) {
-    FileFinder finder(1, true);
+    FileFinder finder(2, 2);
 
     vector<wstring> vec;
 
     wstring root = L"c:", pattern = L".*\.wav$";
 
     finder.Find(root, pattern, vec);
-    return 0;
-    wav_hdr wavHeader;
-    FILE* wavFile;
-    int headerSize = sizeof(wav_hdr), filelength = 0;
 
-    string answer;
+    for (vector<wstring>::const_iterator itr = vec.begin(); itr != vec.end(); itr++)
+    {
+        std::wcout << *itr << std::endl;
 
-    do {
-        string input;
-        string answer;
+        FILE* file;
 
-        const char* filePath;
+        auto error = _wfopen_s(&file, (*itr).c_str(), L"r");
 
-        cout << "Pick wav file from the Windows Media File: ";
-        cin >> input;
-        cin.get();
+        if (error == 0 && file)
+        {
+            wav_hdr header;
 
-        cout << endl;
+            fread(&header, headSize, 1, file);
+            int filelength = getFileSize(file);
+            fclose(file);
 
-        string path = "C:\\Windows\\Media\\" + input + ".wav";
+            cout << "File is                    :" << filelength << " bytes." << endl;
 
-        filePath = path.c_str();
+            cout << "RIFF header                :" << header.RIFF[0]
+                << header.RIFF[1]
+                << header.RIFF[2]
+                << header.RIFF[3] << endl;
 
-        ////////wavFile = fopen(filePath, "r");
+            cout << "WAVE header                :" << header.WAVE[0]
+                << header.WAVE[1]
+                << header.WAVE[2]
+                << header.WAVE[3]
+                << endl;
 
-        ////////if (wavFile == NULL) {
-        ////////    printf("Can not able to open wave file\n");
-        ////////    //exit(EXIT_FAILURE);
-        ////////}
+            cout << "FMT                        :" << header.fmt[0]
+                << header.fmt[1]
+                << header.fmt[2]
+                << header.fmt[3]
+                << endl;
 
-        ////////fread(&wavHeader, headerSize, 1, wavFile);
-        ////////filelength = getFileSize(wavFile);
-        ////////fclose(wavFile);
+            cout << "Data size                  :" << header.ChunkSize << endl;
 
-        ////////cout << "File is                    :" << filelength << " bytes." << endl;
-
-        ////////cout << "RIFF header                :" << wavHeader.RIFF[0]
-        ////////    << wavHeader.RIFF[1]
-        ////////    << wavHeader.RIFF[2]
-        ////////    << wavHeader.RIFF[3] << endl;
-
-        ////////cout << "WAVE header                :" << wavHeader.WAVE[0]
-        ////////    << wavHeader.WAVE[1]
-        ////////    << wavHeader.WAVE[2]
-        ////////    << wavHeader.WAVE[3]
-        ////////    << endl;
-
-        ////////cout << "FMT                        :" << wavHeader.fmt[0]
-        ////////    << wavHeader.fmt[1]
-        ////////    << wavHeader.fmt[2]
-        ////////    << wavHeader.fmt[3]
-        ////////    << endl;
-
-        ////////cout << "Data size                  :" << wavHeader.ChunkSize << endl;
-
-        ////////// Display the sampling Rate form the header
-        ////////cout << "Sampling Rate              :" << wavHeader.SamplesPerSec << endl;
-        ////////cout << "Number of bits used        :" << wavHeader.bitsPerSample << endl;
-        ////////cout << "Number of channels         :" << wavHeader.NumOfChan << endl;
-        ////////cout << "Number of bytes per second :" << wavHeader.bytesPerSec << endl;
-        ////////cout << "Data length                :" << wavHeader.Subchunk2Size << endl;
-        ////////cout << "Audio Format               :" << wavHeader.AudioFormat << endl;
-        ////////// Audio format 1=PCM,6=mulaw,7=alaw, 257=IBM Mu-Law, 258=IBM A-Law, 259=ADPCM 
+            // Display the sampling Rate form the header
+            cout << "Sampling Rate              :" << header.SamplesPerSec << endl;
+            cout << "Number of bits used        :" << header.bitsPerSample << endl;
+            cout << "Number of channels         :" << header.NumOfChan << endl;
+            cout << "Number of bytes per second :" << header.bytesPerSec << endl;
+            cout << "Data length                :" << header.Subchunk2Size << endl;
+            cout << "Audio Format               :" << header.AudioFormat << endl;
+            // Audio format 1=PCM,6=mulaw,7=alaw, 257=IBM Mu-Law, 258=IBM A-Law, 259=ADPCM 
 
 
-        ////////cout << "Block align                :" << wavHeader.blockAlign << endl;
+            cout << "Block align                :" << header.blockAlign << endl;
 
-        ////////cout << "Data string                :" << wavHeader.Subchunk2ID[0]
-        ////////    << wavHeader.Subchunk2ID[1]
-        ////////    << wavHeader.Subchunk2ID[2]
-        ////////    << wavHeader.Subchunk2ID[3]
-        ////////    << endl;
+            cout << "Data string                :" << header.Subchunk2ID[0]
+                << header.Subchunk2ID[1]
+                << header.Subchunk2ID[2]
+                << header.Subchunk2ID[3]
+                << endl;
+        }
+    }
 
-        ////////cout << endl << endl << "Try something else? (y/n)";
-        ////////cin >> answer;
-        //////////cin.get();
-        ////////cout << endl << endl;
-
-    } while (answer == "y");
+    ////////////} while (answer == "y");
 
 
-    getchar();
-    return 0;
+    ////////getchar();
+    ////return 0;
 }
 // find the file size 
 int getFileSize(FILE* inFile) {

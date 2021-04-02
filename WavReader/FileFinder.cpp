@@ -19,7 +19,7 @@ void FileFinder::Find(wstring& dir, wstring& pattern, vector<wstring>& vec, int 
         dir = wstr.substr(0, pos);
     }
 
-    if (verbose)
+    if (verbosity > 1)
         std::wcout << dir << std::endl;
 
     WIN32_FIND_DATA ffd;

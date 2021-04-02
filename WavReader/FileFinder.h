@@ -10,7 +10,7 @@ using std::vector;
 class FileFinder
 {
 private:
-	bool verbose;
+	int verbosity;
 	int level;
 
 	void Find(wstring& dir, wstring& pattern, vector<wstring>& vec, int lev);
@@ -19,13 +19,13 @@ public:
 	FileFinder()
 	{
 		level = 0;
-		verbose = false;
+		verbosity = false;
 	}
 
 	FileFinder(int lev, bool v)
 	{
 		level = lev;
-		verbose = v;
+		verbosity = v;
 	}
 
 	void Find(wstring& dir, wstring& pattern, vector<wstring>& vec)
