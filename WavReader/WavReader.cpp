@@ -28,11 +28,11 @@ typedef struct  WAV_HEADER {
 int getFileSize(FILE* inFile);
 
 int main(int argc, char* argv[]) {
-    FileFinder finder(2, true);
+    FileFinder finder(1, true);
 
     vector<wstring> vec;
 
-    wstring root = L"c:\\", pattern = L"\\.wav";
+    wstring root = L"c:", pattern = L".*\.wav$";
 
     finder.Find(root, pattern, vec);
     return 0;

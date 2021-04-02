@@ -51,9 +51,8 @@ void FileFinder::Find(wstring& dir, wstring& pattern, vector<wstring>& vec, int 
             {
                 std::wsmatch results;
 
-                if (pattern.empty() || std::regex_match(fileName.cbegin(), fileName.cend(),
-                    results, std::wregex(pattern, std::regex_constants::icase)))
-                    vec.push_back(fileName);
+                if (pattern.empty() || std::regex_match(fileName, results, std::wregex(pattern, std::regex_constants::icase)))
+                    vec.push_back(dir + L"\\" + fileName);
             }
 
         search = FindNextFileW(hFile, &ffd);
