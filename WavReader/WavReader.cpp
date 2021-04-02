@@ -42,57 +42,73 @@ int main(int argc, char* argv[]) {
     {
         std::wcout << *itr << std::endl;
 
-        FILE* file;
+        //FILE* file;
 
-        auto error = _wfopen_s(&file, (*itr).c_str(), L"r");
+        //auto error = _wfopen_s(&file, (*itr).c_str(), L"r");
 
-        if (error == 0 && file)
-        {
-            wav_hdr header;
+        ifstream fin(*itr);
 
-            fread(&header, headSize, 1, file);
-            int filelength = getFileSize(file);
-            fclose(file);
+        wav_hdr header;
 
-            cout << "File is                    :" << filelength << " bytes." << endl;
+        istream& streamHeader = fin.read((char*)&header, headSize);
 
-            cout << "RIFF header                :" << header.RIFF[0]
-                << header.RIFF[1]
-                << header.RIFF[2]
-                << header.RIFF[3] << endl;
+        //int filelength = getFileSize(file);
 
-            cout << "WAVE header                :" << header.WAVE[0]
-                << header.WAVE[1]
-                << header.WAVE[2]
-                << header.WAVE[3]
-                << endl;
+        unsigned char* buffer = new unsigned char[header.Subchunk2Size];
+        unique_ptr<unsigned char> pointer(buffer);
 
-            cout << "FMT                        :" << header.fmt[0]
-                << header.fmt[1]
-                << header.fmt[2]
-                << header.fmt[3]
-                << endl;
+        //char* buffer = new char[header.Subchunk2Size];
+        //unique_ptr<char> pointer(buffer);
 
-            cout << "Data size                  :" << header.ChunkSize << endl;
+        istream& streamData = fin.read((char*)buffer, header.Subchunk2Size);
 
-            // Display the sampling Rate form the header
-            cout << "Sampling Rate              :" << header.SamplesPerSec << endl;
-            cout << "Number of bits used        :" << header.bitsPerSample << endl;
-            cout << "Number of channels         :" << header.NumOfChan << endl;
-            cout << "Number of bytes per second :" << header.bytesPerSec << endl;
-            cout << "Data length                :" << header.Subchunk2Size << endl;
-            cout << "Audio Format               :" << header.AudioFormat << endl;
-            // Audio format 1=PCM,6=mulaw,7=alaw, 257=IBM Mu-Law, 258=IBM A-Law, 259=ADPCM 
+        //fread(buffer, header.Subchunk2Size, 1, file);
+
+        fin.close();
+
+        int i = 0;
+
+        while (i < header.Subchunk2Size)
+            cout << buffer[i++];
+
+        //cout << "File is                    :" << filelength << " bytes." << endl;
+
+        cout << "RIFF header                :" << header.RIFF[0]
+            << header.RIFF[1]
+            << header.RIFF[2]
+            << header.RIFF[3] << endl;
+
+        cout << "WAVE header                :" << header.WAVE[0]
+            << header.WAVE[1]
+            << header.WAVE[2]
+            << header.WAVE[3]
+            << endl;
+
+        cout << "FMT                        :" << header.fmt[0]
+            << header.fmt[1]
+            << header.fmt[2]
+            << header.fmt[3]
+            << endl;
+
+        cout << "Data size                  :" << header.ChunkSize << endl;
+
+        // Display the sampling Rate form the header
+        cout << "Sampling Rate              :" << header.SamplesPerSec << endl;
+        cout << "Number of bits used        :" << header.bitsPerSample << endl;
+        cout << "Number of channels         :" << header.NumOfChan << endl;
+        cout << "Number of bytes per second :" << header.bytesPerSec << endl;
+        cout << "Data length                :" << header.Subchunk2Size << endl;
+        cout << "Audio Format               :" << header.AudioFormat << endl;
+        // Audio format 1=PCM,6=mulaw,7=alaw, 257=IBM Mu-Law, 258=IBM A-Law, 259=ADPCM 
 
 
-            cout << "Block align                :" << header.blockAlign << endl;
+        cout << "Block align                :" << header.blockAlign << endl;
 
-            cout << "Data string                :" << header.Subchunk2ID[0]
-                << header.Subchunk2ID[1]
-                << header.Subchunk2ID[2]
-                << header.Subchunk2ID[3]
-                << endl;
-        }
+        cout << "Data string                :" << header.Subchunk2ID[0]
+            << header.Subchunk2ID[1]
+            << header.Subchunk2ID[2]
+            << header.Subchunk2ID[3]
+            << endl;
     }
 
     ////////////} while (answer == "y");
