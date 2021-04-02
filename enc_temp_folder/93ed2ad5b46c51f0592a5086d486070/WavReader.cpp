@@ -71,16 +71,12 @@ int main(int argc, char* argv[]) {
         int bytesPerSample = header.bitsPerSample / 8;
         int numSamples = numBytes / bytesPerSample;
 
-        float* floatValues = new float[numSamples];
-
-        for (int i = 0; i < numBytes; i++)
-        {
-
-        }
-
         continue;
 
         int i = 0;
+
+        while (i < header.Subchunk2Size)
+            cout << buffer[i++];
 
         //cout << "File is                    :" << filelength << " bytes." << endl;
 
