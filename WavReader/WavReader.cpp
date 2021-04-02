@@ -2,6 +2,7 @@
 #include <string>
 #include <fstream>
 #include "FileFinder.h"
+#include <regex>
 
 using namespace std;
 using std::string;
@@ -29,6 +30,132 @@ int getFileSize(FILE* inFile);
 
 const int headSize = sizeof(wav_hdr);
 
+inline float Convert(unsigned char buffer[], int size)
+{
+    if (size == 2)
+    {
+        int val = buffer[0];
+        val <<= 8;
+        val |= buffer[1];
+
+        if (val != 0)
+        {
+            int a = 0;
+        }
+
+        return static_cast<float>(val);
+    }
+
+    return 0;
+}
+
+//Wav Header
+struct wav_header_t
+{
+    char chunkID[4]; //"RIFF" = 0x46464952
+    unsigned long chunkSize; //28 [+ sizeof(wExtraFormatBytes) + wExtraFormatBytes] + sum(sizeof(chunk.id) + sizeof(chunk.size) + chunk.size)
+    char format[4]; //"WAVE" = 0x45564157
+    char subchunk1ID[4]; //"fmt " = 0x20746D66
+    unsigned long subchunk1Size; //16 [+ sizeof(wExtraFormatBytes) + wExtraFormatBytes]
+    unsigned short audioFormat;
+    unsigned short numChannels;
+    unsigned long sampleRate;
+    unsigned long byteRate;
+    unsigned short blockAlign;
+    unsigned short bitsPerSample;
+    //[WORD wExtraFormatBytes;]
+    //[Extra format bytes]
+};
+
+//Chunks
+struct chunk_t
+{
+    char ID[4]; //"data" = 0x61746164
+    unsigned long size;  //Chunk data bytes
+};
+
+void WavReader(wstring& fileName)//, wstring& fileNameNew)
+{
+    FILE* fin = 0;
+    
+    errno_t error =  _wfopen_s(&fin, fileName.c_str(), L"rb");
+
+    if (error == 0 && fin)
+    {
+        //Read WAV header
+        wav_header_t header;
+        fread(&header, sizeof(header), 1, fin);
+
+        //Print WAV header
+        printf("WAV File Header read:\n");
+        printf("File Type: %s\n", header.chunkID);
+        printf("File Size: %ld\n", header.chunkSize);
+        printf("WAV Marker: %s\n", header.format);
+        printf("Format Name: %s\n", header.subchunk1ID);
+        printf("Format Length: %ld\n", header.subchunk1Size);
+        printf("Format Type: %hd\n", header.audioFormat);
+        printf("Number of Channels: %hd\n", header.numChannels);
+        printf("Sample Rate: %ld\n", header.sampleRate);
+        printf("Sample Rate * Bits/Sample * Channels / 8: %ld\n", header.byteRate);
+        printf("Bits per Sample * Channels / 8.1: %hd\n", header.blockAlign);
+        printf("Bits per Sample: %hd\n", header.bitsPerSample);
+
+        //skip wExtraFormatBytes & extra format bytes
+        //fseek(f, header.chunkSize - 16, SEEK_CUR);
+
+        //Reading file
+        chunk_t chunk;
+        printf("id\t" "size\n");
+        //go to data chunk
+        bool dataFound = false;
+
+        while (!dataFound)
+        {
+            fread(&chunk, sizeof(chunk), 1, fin);
+
+            dataFound = *(unsigned int*)&chunk.ID == 0x61746164;
+
+            //skip chunk data bytes
+            if (!dataFound)
+                fseek(fin, chunk.size, SEEK_CUR);
+        }
+
+        //Number of samples
+        int sample_size = header.bitsPerSample / 8;
+        int samples_count = chunk.size * 8 / header.bitsPerSample;
+        printf("Samples count = %i\n", samples_count);
+
+        short int* value = new short int[samples_count];
+        memset(value, 0, sizeof(short int) * samples_count);
+
+        //Reading data
+        int i = 0;
+
+        while (i < samples_count)
+            fread(&value[i++], sample_size, 1, fin);
+
+        fclose(fin);
+
+        auto pattern = L"\\.wav$";
+        auto replace = L"_.wav";
+
+        auto fileNameNew = std::regex_replace(fileName, std::wregex(pattern, std::regex_constants::icase), replace);
+
+        //Write data into the file
+        FILE* fout = 0;
+        
+        error = _wfopen_s(&fout, fileNameNew.c_str(), L"w");
+        
+        if (error == 0 && fout)
+        {
+            for (int i = 0; i < samples_count; i++)
+                fprintf(fout, "%d\n", value[i]);
+
+            fclose(fout);
+        }
+    }
+}
+
 int main(int argc, char* argv[]) {
     FileFinder finder(2, 2);
 
@@ -42,6 +169,11 @@ int main(int argc, char* argv[]) {
     {
         std::wcout << *itr << std::endl;
 
+        wstring wstr = *itr;
+
+        WavReader(wstr);
+
+        continue;
         //FILE* file;
 
         //auto error = _wfopen_s(&file, (*itr).c_str(), L"r");
@@ -53,6 +185,8 @@ int main(int argc, char* argv[]) {
         istream& streamHeader = fin.read((char*)&header, headSize);
 
         //int filelength = getFileSize(file);
+
+        wav_hdr* myPointer = &header;
 
         unsigned char* buffer = new unsigned char[header.Subchunk2Size];
         unique_ptr<unsigned char> pointer(buffer);
@@ -73,9 +207,16 @@ int main(int argc, char* argv[]) {
 
         float* floatValues = new float[numSamples];
 
-        for (int i = 0; i < numBytes; i++)
-        {
+        unsigned char* bufferon = new unsigned char[bytesPerSample];
 
+        for (int i = 0; i < numBytes; i += bytesPerSample)
+        {
+            for (int j = 0; j < bytesPerSample; j++)
+                bufferon[j] = buffer[i + j];
+
+            float f = Convert(bufferon, bytesPerSample);
+
+            cout << f << " ";
         }
 
         continue;
