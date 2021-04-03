@@ -1,10 +1,13 @@
 #include <Windows.h>
 #include <iostream>
 #include <regex>
+#include <filesystem>
 
 #include "FileFinder.h"
 
 using std::wstring;
+
+const wstring junkdir = L"c:\\junkwavs";
 
 void FileFinder::Find(wstring& dir, wstring& pattern, vector<wstring>& vec, int lev)
 {
@@ -51,8 +54,36 @@ void FileFinder::Find(wstring& dir, wstring& pattern, vector<wstring>& vec, int 
             {
                 std::wsmatch results;
 
+                auto filePath = dir + L"\\" + fileName;
+
                 if (pattern.empty() || std::regex_match(fileName, results, std::wregex(pattern, std::regex_constants::icase)))
-                    vec.push_back(dir + L"\\" + fileName);
+                    vec.push_back(filePath);
+
+                auto patternDelete = L".*_\\.wav$";
+
+                if (std::regex_match(fileName, results, std::wregex(patternDelete, std::regex_constants::icase)))
+                {
+                    try 
+                    {
+                        wstring::size_type pos = filePath.find_last_of(L"\\/");
+                        fileName = filePath.substr(pos);
+
+                        std::filesystem::create_directory(junkdir);
+
+                        std::filesystem::rename(filePath, junkdir + fileName);
+                    }
+                    catch (std::filesystem::filesystem_error& e) 
+                    {
+                        std::cout << e.what() << '\n';
+                    }
+
+                    //int status = _wremove(fileName.c_str());
+
+                    //if (status != 0)
+                    {
+
+                    }
+                }
             }
 
         search = FindNextFileW(hFile, &ffd);

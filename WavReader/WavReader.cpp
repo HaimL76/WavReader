@@ -169,18 +169,13 @@ int main(int argc, char* argv[]) {
     {
         std::wcout << *itr << std::endl;
 
-        wstring wstr = *itr;
-
-        WavReader(wstr);
-
-        continue;
-        //FILE* file;
-
-        //auto error = _wfopen_s(&file, (*itr).c_str(), L"r");
+        //wifstream fin(*itr);
 
         ifstream fin(*itr);
 
         wav_hdr header;
+
+        //wistream& streamHeader = fin.read((wchar_t*)&header, headSize);
 
         istream& streamHeader = fin.read((char*)&header, headSize);
 
@@ -196,7 +191,7 @@ int main(int argc, char* argv[]) {
 
         int numBytes = header.Subchunk2Size;
 
-        istream& streamData = fin.read((char*)buffer, numBytes);
+        //wistream& streamData = fin.read((wchar_t*)buffer, numBytes);
 
         //fread(buffer, header.Subchunk2Size, 1, file);
 
